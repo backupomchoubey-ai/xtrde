@@ -85,14 +85,17 @@ themeSchema.pre('save', async function(next) {
 themeSchema.statics.getActiveTheme = async function() {
   let theme = await this.findOne({ isActive: true })
   if (!theme) {
-    // Return default theme if none active
     theme = await this.findOne({ name: 'Default Blue' })
     if (!theme) {
-      // Create default theme
-      theme = await this.create({
-        name: 'Default Blue',
-        isActive: true
-      })
+      try {
+        theme = await this.create({ name: 'Default Blue', isActive: true })
+      } catch (err) {
+        if (err.code === 11000) {
+          theme = await this.findOne({ name: 'Default Blue' })
+        } else {
+          throw err
+        }
+      }
     }
   }
   return theme
